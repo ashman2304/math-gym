@@ -14,7 +14,7 @@ def new_problem():
     st.session_state.show_solution = False
 
 # Title
-st.title("Daily Maths Gym")
+st.title("🧮 Daily Maths Gym")
 st.markdown("### Master's Level Training")
 st.divider()
 
