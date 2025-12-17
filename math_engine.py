@@ -20,7 +20,9 @@ class MathEngine:
                 self.generate_gaussian_integral,
                 self.generate_partial_fractions,
                 self.generate_u_substitution,
-                self.generate_integration_by_parts
+                self.generate_integration_by_parts,
+                self.generate_trig_powers,
+                self.generate_trig_substitution
             ],
             "Differential Equations": [
                 self.generate_second_order_ode
