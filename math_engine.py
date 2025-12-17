@@ -5,6 +5,9 @@ from sympy import (
 )
 
 from sympy.abc import x
+from sympy.ntheory.modular import crt
+from sympy.core.numbers import igcd
+from sympy import invert
 
 class MathEngine:
     def __init__(self):
@@ -26,9 +29,65 @@ class MathEngine:
             ],
             "Differential Equations": [
                 self.generate_second_order_ode
+            ],
+            "Number Theory": [
+                self.generate_linear_congruence,
+                self.generate_chinese_remainder
             ]
         }
 
+    def generate_linear_congruence(self):
+        """
+        Generates ax = b (mod m).
+        Requires finding the modular inverse of a.
+        """
+        # 1. Pick a modulus (not too large for mental math/scratchpad)
+        m = random.choice([7, 11, 13, 17, 19, 23, 26, 29])
+        
+        # 2. Pick 'a' such that gcd(a, m) = 1 (guarantees a unique solution)
+        while True:
+            a_val = random.randint(2, m-1)
+            if igcd(a_val, m) == 1:
+                break
+        
+        # 3. Pick a target remainder 'b'
+        b_val = random.randint(1, m-1)
+        
+        # 4. Solve: x = b * a^-1 (mod m)
+        # SymPy's 'invert' finds the modular inverse
+        a_inv = invert(a_val, m)
+        solution = (b_val * a_inv) % m
+        
+        return {
+            "topic": "Number Theory", "type": "Linear Congruence",
+            "problem": f"Solve for x:\n\n$$ {a_val}x \\equiv {b_val} \\pmod{{{m}}} $$",
+            "solution": f"$$ x \\equiv {solution} \\pmod{{{m}}} $$"
+        }
+
+    def generate_chinese_remainder(self):
+        """
+        Generates a system of two congruences:
+        x = a1 (mod m1)
+        x = a2 (mod m2)
+        """
+        # 1. Pick two coprime moduli (usually primes or small coprime integers)
+        pairs = [(3, 5), (3, 7), (5, 7), (3, 8), (5, 8), (4, 9)]
+        m1, m2 = random.choice(pairs)
+        
+        # 2. Pick remainders
+        r1 = random.randint(1, m1-1)
+        r2 = random.randint(1, m2-1)
+        
+        # 3. Solve using SymPy's crt function
+        # crt returns (solution, combined_modulus)
+        sol, N = crt([m1, m2], [r1, r2])
+        
+        return {
+            "topic": "Number Theory", "type": "Chinese Remainder Thm",
+            "problem": f"Find x satisfying the system:\n\n$$ \\begin{{cases}} x \\equiv {r1} \\pmod{{{m1}}} \\\\ x \\equiv {r2} \\pmod{{{m2}}} \\end{{cases}} $$",
+            "solution": f"$$ x \\equiv {sol} \\pmod{{{N}}} $$"
+        }
+    
     def generate_eigenvalue_problem(self):
         # Here we first randomly choose either a 2 or a 3 dimensional matrix
         # With create a list called 'evals' we then choose two or three 
