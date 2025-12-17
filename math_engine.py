@@ -257,36 +257,36 @@ class MathEngine:
         if len(sol) > 300: return False
         return True
 
-def get_random_problem(self, topic_request="Mix"):
-        """
-        topic_request: "Mix", "Linear Algebra", "Calculus", etc.
-        """
-        # 1. Decide which pool of functions to draw from
-        if topic_request == "Mix" or topic_request is None:
-            # Flatten all lists into one big list of choices
-            valid_generators = []
-            for func_list in self.topic_map.values():
-                valid_generators.extend(func_list)
-        else:
-            # Pick only the list for the requested topic
-            valid_generators = self.topic_map.get(topic_request, [])
+    def get_random_problem(self, topic_request="Mix"):
+            """
+            topic_request: "Mix", "Linear Algebra", "Calculus", etc.
+            """
+            # 1. Decide which pool of functions to draw from
+            if topic_request == "Mix" or topic_request is None:
+                # Flatten all lists into one big list of choices
+                valid_generators = []
+                for func_list in self.topic_map.values():
+                    valid_generators.extend(func_list)
+            else:
+                # Pick only the list for the requested topic
+                valid_generators = self.topic_map.get(topic_request, [])
 
-        # Safety check: if topic not found, default to everything
-        if not valid_generators:
-            for func_list in self.topic_map.values():
-                valid_generators.extend(func_list)
+            # Safety check: if topic not found, default to everything
+            if not valid_generators:
+                for func_list in self.topic_map.values():
+                    valid_generators.extend(func_list)
 
-        # 2. Try to generate a valid problem
-        for _ in range(10):
-            generator = random.choice(valid_generators)
-            try:
-                problem_data = generator()
-                if self._is_problem_acceptable(problem_data):
-                    return problem_data
-            except Exception:
-                continue
-        
-        return {
-            "topic": "System", "type": "Error",
-            "problem": "Could not generate a clean problem. Please retry.", "solution": ""
-        }
+            # 2. Try to generate a valid problem
+            for _ in range(10):
+                generator = random.choice(valid_generators)
+                try:
+                    problem_data = generator()
+                    if self._is_problem_acceptable(problem_data):
+                        return problem_data
+                except Exception:
+                    continue
+            
+            return {
+                "topic": "System", "type": "Error",
+                "problem": "Could not generate a clean problem. Please retry.", "solution": ""
+            }
