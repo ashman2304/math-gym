@@ -10,22 +10,50 @@ class MathEngine:
     def __init__(self):
         self.C1, self.C2 = symbols('C1 C2')
 
+        self.topic_map = {
+            "Linear Algebra": [
+                self.generate_eigenvalue_problem
+            ],
+            "Calculus": [
+                self.generate_definite_integral_reverse,
+                self.generate_improper_gamma,
+                self.generate_gaussian_integral,
+                self.generate_partial_fractions,
+                self.generate_u_substitution
+            ],
+            "Differential Equations": [
+                self.generate_second_order_ode
+            ]
+        }
+
     def generate_eigenvalue_problem(self):
+        # Here we first randomly choose either a 2 or a 3 dimensional matrix
+        # With create a list called 'evals' we then choose two or three 
+        # values for the off diagonal elements
+        # We construct a diagonal matrix using 'eye' then set the off diagonal
+        # elements to the chosen values
         n = random.choice([2, 3])
         evals = [random.randint(-4, 4) for _ in range(n)]
         D = eye(n)
         for i in range(n):
             D[i, i] = evals[i]
 
+        # We create a random n x n integer matrix P
+        # The lambda function ensures the elements are randomly chosen
+        # each time the function is called.
+        # The if loop ensures the determinant of P is 1 or -1
+        # if it is, we break the loop and use P, otherwise we try again
+        # This ensures P is invertible and has integer inverse
         while True:
             P = Matrix(n, n, lambda i, j: random.randint(-2, 2))
             if abs(P.det()) == 1: 
                 break
-                
+
+
         A = P * D * P.inv()
         
         return {
-            "topic": "Linear Algebra",   # <--- This was likely missing
+            "topic": "Linear Algebra",
             "type": "Eigenvalues",
             "problem": f"Find the eigenvalues of matrix A:\n\n$$ A = {latex(A)} $$",
             "solution": f"$$ \\lambda = {sorted(evals)} $$"
@@ -53,6 +81,45 @@ class MathEngine:
             "type": "Definite Integral",
             "problem": f"Evaluate the definite integral:\n\n$$ \\int_{{{latex(a)}}}^{{{latex(b)}}} \\left( {latex(f_problem)} \\right) \\, dx $$",
             "solution": f"$$ {latex(exact_value)} $$"
+        }
+    
+    def generate_improper_gamma(self):
+        n = random.randint(1, 5)
+        a = random.randint(1, 4)
+        integrand = x**n * exp(-a * x)
+        solution = integrate(integrand, (x, 0, oo))
+        return {
+            "topic": "Calculus", "type": "Improper Integral (Gamma)",
+            "problem": f"Evaluate:\n\n$$ \\int_{{0}}^{{\\infty}} {latex(integrand)} \\, dx $$",
+            "solution": f"$$ {latex(solution)} $$"
+        }
+    
+    def generate_gaussian_integral(self):
+        a = random.choice([1, 2, 4, 9, 16])
+        integrand = exp(-a * x**2)
+        solution = integrate(integrand, (x, -oo, oo))
+        return {
+            "topic": "Calculus", "type": "Gaussian Integral",
+            "problem": f"Evaluate:\n\n$$ \\int_{{-\\infty}}^{{\\infty}} {latex(integrand)} \\, dx $$",
+            "solution": f"$$ {latex(solution)} $$"
+        }
+    
+    
+    def generate_u_substitution(self):
+        g_options = [(x**2 + 1, 2*x), (sin(x), cos(x)), (log(x + 1), 1/(x+1))]
+        g, g_prime = random.choice(g_options)
+        n = random.randint(2, 4)
+        f_u_options = [lambda u: u**n, lambda u: 1/u, lambda u: u**Rational(1, 2)]
+        outer_func = random.choice(f_u_options)
+        integrand = outer_func(g) * g_prime
+        if g.has(sin): a, b = 0, pi/2
+        elif g.has(log): a, b = 0, exp(1)-1
+        else: a, b = 0, 1
+        solution = integrate(integrand, (x, a, b))
+        return {
+            "topic": "Calculus", "type": "U-Substitution",
+            "problem": f"Evaluate:\n\n$$ \\int_{{{latex(a)}}}^{{{latex(b)}}} {latex(integrand)} \\, dx $$",
+            "solution": f"$$ {latex(solution)} $$"
         }
 
     def generate_second_order_ode(self):
@@ -190,17 +257,28 @@ class MathEngine:
         if len(sol) > 300: return False
         return True
 
-    def get_random_problem(self):
-        generators = [
-            self.generate_eigenvalue_problem,
-            self.generate_definite_integral_reverse,
-            self.generate_second_order_ode,
-            self.generate_partial_fractions, # <--- Added
-            self.generate_u_substitution  # <--- Added
-        ]
-        
+def get_random_problem(self, topic_request="Mix"):
+        """
+        topic_request: "Mix", "Linear Algebra", "Calculus", etc.
+        """
+        # 1. Decide which pool of functions to draw from
+        if topic_request == "Mix" or topic_request is None:
+            # Flatten all lists into one big list of choices
+            valid_generators = []
+            for func_list in self.topic_map.values():
+                valid_generators.extend(func_list)
+        else:
+            # Pick only the list for the requested topic
+            valid_generators = self.topic_map.get(topic_request, [])
+
+        # Safety check: if topic not found, default to everything
+        if not valid_generators:
+            for func_list in self.topic_map.values():
+                valid_generators.extend(func_list)
+
+        # 2. Try to generate a valid problem
         for _ in range(10):
-            generator = random.choice(generators)
+            generator = random.choice(valid_generators)
             try:
                 problem_data = generator()
                 if self._is_problem_acceptable(problem_data):
@@ -208,10 +286,7 @@ class MathEngine:
             except Exception:
                 continue
         
-        # Fallback must ALSO have the 'topic' key
         return {
-            "topic": "System",
-            "type": "Error",
-            "problem": "Could not generate a clean problem. Please retry.",
-            "solution": ""
+            "topic": "System", "type": "Error",
+            "problem": "Could not generate a clean problem. Please retry.", "solution": ""
         }
