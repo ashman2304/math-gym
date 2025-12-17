@@ -161,6 +161,76 @@ class MathEngine:
             "problem": f"Evaluate using integration by parts:\n\n$$ \\int_{{{latex(a)}}}^{{{latex(b)}}} {latex(integrand)} \\, dx $$",
             "solution": f"$$ {latex(solution)} $$"
         }
+    
+    def generate_trig_powers(self):
+        """
+        Generates integrals of sin^n * cos^m.
+        Focuses on 'odd power' technique or 'half-angle' squares.
+        """
+        case = random.choice(['odd_sin', 'odd_cos', 'squared'])
+        
+        if case == 'odd_sin':
+            # sin^3(x) * cos^n(x) -> peel off sin(x), convert sin^2 to 1-cos^2
+            n = 3
+            m = random.choice([0, 2])
+            integrand = sin(x)**n * cos(x)**m
+            
+        elif case == 'odd_cos':
+            # cos^3(x) * sin^n(x) -> peel off cos(x), convert cos^2 to 1-sin^2
+            n = random.choice([0, 2])
+            m = 3
+            integrand = sin(x)**n * cos(x)**m
+            
+        elif case == 'squared':
+            # sin^2 or cos^2 -> requires half angle identity
+            n = random.choice([0, 2])
+            m = 2 if n == 0 else 0
+            integrand = sin(x)**n * cos(x)**m
+        
+        # Standard limits 0 to pi/2 usually simplify nicely for Wallis/powers
+        a, b = 0, pi/2
+        solution = integrate(integrand, (x, a, b))
+        
+        return {
+            "topic": "Calculus", "type": "Trigonometric Integrals",
+            "problem": f"Evaluate:\n\n$$ \\int_{{{latex(a)}}}^{{{latex(b)}}} {latex(integrand)} \\, dx $$",
+            "solution": f"$$ {latex(solution)} $$"
+        }
+
+    def generate_trig_substitution(self):
+        """
+        Generates integrals involving sqrt(a^2 - x^2).
+        Standard substitution: x = a*sin(theta).
+        """
+        # Choose a perfect square 'a'
+        a_val = random.choice([1, 2, 3, 4])
+        a_sq = a_val**2
+        
+        # Form: sqrt(a^2 - x^2) or 1/sqrt(...)
+        form = random.choice(['numerator', 'denominator'])
+        
+        if form == 'numerator':
+            integrand = sqrt(a_sq - x**2)
+        else:
+            integrand = 1 / sqrt(a_sq - x**2)
+            
+        # Limits: 0 to a_val/2 or 0 to a_val
+        # 0 -> theta=0
+        # a -> theta=pi/2
+        # a/2 -> theta=pi/6
+        limit_choice = random.choice([a_val, a_val/2])
+        if isinstance(limit_choice, float):
+             # Ensure a_val/2 is handled as a Rational or simple number for latex
+             limit_choice = Rational(a_val, 2)
+             
+        a, b = 0, limit_choice
+        solution = integrate(integrand, (x, a, b))
+        
+        return {
+            "topic": "Calculus", "type": "Trigonometric Substitution",
+            "problem": f"Evaluate using trig substitution:\n\n$$ \\int_{{{latex(a)}}}^{{{latex(b)}}} {latex(integrand)} \\, dx $$",
+            "solution": f"$$ {latex(solution)} $$"
+        }
 
     def generate_second_order_ode(self):
         case = random.choice(['real_distinct', 'real_repeated', 'complex'])
