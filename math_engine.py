@@ -19,7 +19,8 @@ class MathEngine:
                 self.generate_improper_gamma,
                 self.generate_gaussian_integral,
                 self.generate_partial_fractions,
-                self.generate_u_substitution
+                self.generate_u_substitution,
+                self.generate_integration_by_parts
             ],
             "Differential Equations": [
                 self.generate_second_order_ode
@@ -119,6 +120,45 @@ class MathEngine:
         return {
             "topic": "Calculus", "type": "U-Substitution",
             "problem": f"Evaluate:\n\n$$ \\int_{{{latex(a)}}}^{{{latex(b)}}} {latex(integrand)} \\, dx $$",
+            "solution": f"$$ {latex(solution)} $$"
+        }
+    
+    def generate_integration_by_parts(self):
+        """
+        Generates int u dv.
+        Covers x*e^x, x*sin(x), and ln(x) types.
+        """
+        case = random.choice(['x_exp', 'x_trig', 'log'])
+        
+        if case == 'x_exp':
+            # Type: x * e^(ax)
+            a_val = random.choice([1, 2, -1, -2])
+            integrand = x * exp(a_val * x)
+            # Limits: 0 to 1 is clean
+            a, b = 0, 1
+            
+        elif case == 'x_trig':
+            # Type: x * sin(kx) or x * cos(kx)
+            func = random.choice([sin, cos])
+            k = random.randint(1, 2)
+            integrand = x * func(k * x)
+            # Limits: 0 to pi or pi/2
+            a, b = 0, pi
+            if k == 2: b = pi/2
+            
+        elif case == 'log':
+            # Type: x^n * ln(x) (Requires swapping u and dv)
+            n = random.randint(0, 2) # 0 means just ln(x)
+            integrand = x**n * log(x)
+            # Limits: 1 to e (eliminates the ln(1)=0 and ln(e)=1 nicely)
+            a, b = 1, exp(1)
+            
+        solution = integrate(integrand, (x, a, b))
+        
+        return {
+            "topic": "Calculus",
+            "type": "Integration by Parts",
+            "problem": f"Evaluate using integration by parts:\n\n$$ \\int_{{{latex(a)}}}^{{{latex(b)}}} {latex(integrand)} \\, dx $$",
             "solution": f"$$ {latex(solution)} $$"
         }
 
